@@ -120,7 +120,8 @@ async def extract_emails_api(file: UploadFile = File(...)):
             raise HTTPException(status_code=400, detail="The file contains no data")
         
         # Flatten and regex search for emails
-        all_text = " ".join(df.astype(str).values.flatten())
+        # Using map(str, ...) ensures no floats/NaNs crash the string join
+        all_text = " ".join(map(str, df.values.flatten()))
         email_regex = r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+'
         emails = list(set(re.findall(email_regex, all_text)))
         
