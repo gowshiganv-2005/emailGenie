@@ -18,22 +18,24 @@ import os
 
 # Try multiple possible locations for static/templates
 POSSIBLE_ROOTS = [
-    Path(__file__).resolve().parent,           # /app/
-    Path(__file__).resolve().parent.parent,    # /root/
-    Path(__file__).resolve().parent.parent / "api", # /root/api/ (for Vercel bundling)
-    Path.cwd(),                                # current working dir
-    Path.cwd() / "api"                         # /api/ in CWD
+    Path("/var/task/api"),                     # Vercel Production Path
+    Path(__file__).resolve().parent.parent / "api", 
+    Path(__file__).resolve().parent.parent,
+    Path.cwd() / "api",
+    Path.cwd()
 ]
 
 static_path = None
 templates_path = None
 
 for root in POSSIBLE_ROOTS:
+    if not root.exists():
+        continue
     s = root / "static"
     t = root / "templates"
-    if s.is_dir() and (s / "style.css").exists(): # Verify it's the right static folder
+    if s.is_dir():
         static_path = str(s)
-    if t.is_dir() and (t / "index.html").exists():
+    if t.is_dir():
         templates_path = str(t)
     if static_path and templates_path:
         break
