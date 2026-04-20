@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+app/static/__pycache__/
+.vscode/
+.idea/
+*.xlsx
+*.csv
+node_modules/
+dist/
+build/
