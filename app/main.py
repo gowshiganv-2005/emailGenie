@@ -65,14 +65,35 @@ async def home(request: Request):
         except Exception:
             pass
     
+    # Diagnostic info for debugging
+    diag = []
+    try:
+        diag.append(f"CWD: {os.getcwd()}")
+        diag.append(f"File: {__file__}")
+        diag.append(f"Roots searched: {[str(r) for r in POSSIBLE_ROOTS]}")
+        # List items in root_dir
+        root_dir = Path(__file__).resolve().parent.parent
+        diag.append(f"Root dir content: {os.listdir(str(root_dir)) if root_dir.exists() else 'N/A'}")
+        if (root_dir / "api").exists():
+            diag.append(f"API dir content: {os.listdir(str(root_dir / 'api'))}")
+    except Exception as e:
+        diag.append(f"Error listing: {e}")
+
+    diag_html = "".join([f"<li>{d}</li>" for d in diag])
+
     # Fallback if templates are missing in serverless environment
-    return """
+    return f"""
     <html>
         <head><title>Email Genie | Serverless Fallback</title></head>
         <body style="font-family: sans-serif; text-align: center; padding: 50px;">
             <h1>Email Genie AI</h1>
             <p>The application is running, but UI templates could not be located.</p>
             <p>Please check your deployment structure.</p>
+            <hr>
+            <div style="text-align: left; background: #eee; padding: 15px; display: inline-block; border-radius: 8px;">
+                <h3>Diagnostics:</h3>
+                <ul>{diag_html}</ul>
+            </div>
             <hr>
             <p><small>Backend Status: OK</small></p>
         </body>
