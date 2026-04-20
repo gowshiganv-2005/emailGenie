@@ -18,7 +18,11 @@ class AIService:
         if not self.api_key:
             raise ValueError("GEMMA_API_KEY is not configured.")
 
-        system_prompt = f"Write a {tone} email about: {user_prompt}. Return ONLY JSON: {{'subject': '...', 'body': '...'}}"
+        system_prompt = (
+            f"Write a {tone} email about: {user_prompt}.\n"
+            "Output EXACTLY and ONLY a JSON object with these keys: \"subject\" and \"body\".\n"
+            "Use DOUBLE QUOTES for keys and string values. No markdown blocks."
+        )
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -27,7 +31,7 @@ class AIService:
         }
 
         messages = [
-            {"role": "system", "content": "You are a professional email assistant. Output JSON only."},
+            {"role": "system", "content": "You are a professional email assistant. You respond only with valid JSON according to RFC 8259."},
             {"role": "user", "content": system_prompt}
         ]
 
@@ -36,23 +40,38 @@ class AIService:
                 response = await client.post(self.api_url, headers=headers, json={
                     "model": self.model_name,
                     "messages": messages,
-                    "temperature": 0.7
+                    "temperature": 0.5 # Lower temperature for more stable JSON
                 })
             except httpx.TimeoutException:
-                raise Exception("AI took too long (>9s). Vercel limits free projects to 10s. Try a shorter prompt or a faster model.")
+                raise Exception("AI took too long. Try a shorter prompt.")
             
             if response.status_code != 200:
-                raise Exception(f"AI Service Error: {response.text}")
+                raise Exception(f"AI Error: {response.status_code}")
                 
             result = response.json()
             content = result["choices"][0]["message"]["content"].strip()
             
-            # Basic extraction
+            # Clean up markdown formatting if AI skipped instructions
+            if content.startswith("```json"):
+                content = content.replace("```json", "").replace("```", "").strip()
+            elif content.startswith("```"):
+                content = content.replace("```", "").strip()
+
+            # Extraction
             json_match = re.search(r'\{.*\}', content, re.DOTALL)
             if json_match:
                 content = json_match.group(0)
-                
-            parsed = json.loads(content)
+            
+            try:
+                parsed = json.loads(content)
+            except json.JSONDecodeError:
+                # Fallback for single quotes or malformed JSON
+                import ast
+                try:
+                    parsed = ast.literal_eval(content)
+                except Exception:
+                    raise Exception(f"AI returned invalid JSON: {content[:100]}...")
+
             return {
                 "subject": parsed.get("subject", "No Subject"),
                 "body": parsed.get("body", "No Content"),
