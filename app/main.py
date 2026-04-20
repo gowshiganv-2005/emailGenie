@@ -20,7 +20,9 @@ import os
 POSSIBLE_ROOTS = [
     Path(__file__).resolve().parent,           # /app/
     Path(__file__).resolve().parent.parent,    # /root/
-    Path.cwd()                                 # current working dir
+    Path(__file__).resolve().parent.parent / "api", # /root/api/ (for Vercel bundling)
+    Path.cwd(),                                # current working dir
+    Path.cwd() / "api"                         # /api/ in CWD
 ]
 
 static_path = None

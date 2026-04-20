@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-powered email automation tool with voice input, multi-recipient support, and professional email generation.">
+    <title>Shuttle One | Premium Professional Email Agent</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Premium Background Effects -->
+    <div class="aurora-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="app-wrapper">
+        <header>
+            <div class="brand">
+                <div class="brand-icon"><i class="fas fa-rocket"></i></div>
+                <h1>Email <span class="brand-accent">Genie</span></h1>
+            </div>
+            <div class="header-meta">
+                <div class="meta-item">
+                    <i class="fas fa-shield-check"></i>
+                    <span>SMTP SSL Secure</span>
+                </div>
+                <div class="meta-item">
+                    <i class="fas fa-circle-check"></i>
+                    <span>AI Engine Active</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-grid">
+            <!-- Sidebar: Generation & Configuration -->
+            <aside class="sidebar">
+                <div class="glass-card">
+                    <div class="panel-title"><i class="fas fa-wand-sparkles"></i> AI Designer</div>
+                    <div class="input-stack">
+                        <div class="field">
+                            <label for="prompt">Campaign Intent</label>
+                            <textarea id="prompt" rows="6"
+                                placeholder="e.g. Write a cold outreach email to a tech lead about our new AI security plugin..."></textarea>
+                        </div>
+
+                        <button id="generate-btn" class="btn btn-primary">
+                            <span id="btn-text">Craft Content</span>
+                            <div id="loader" class="loader hidden"></div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="panel-title"><i class="fas fa-paperclip"></i> Media Assets</div>
+                    <div class="dropzone" id="drop-zone">
+                        <i class="fas fa-cloud-arrow-up"></i>
+                        <p>Drag files here or click to browse</p>
+                        <span style="font-size: 0.75rem; color: var(--text-dim); opacity: 0.8;">Maximum 20MB total</span>
+                        <input type="file" id="file-input" multiple class="hidden">
+                    </div>
+                    <div id="file-list" class="file-list"></div>
+                </div>
+            </aside>
+
+            <!-- Main: Editor and Send -->
+            <div class="editor-container">
+                <div class="glass-card editor-surface">
+                    <div class="panel-title" style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 1.5rem;">
+                        <span><i class="fas fa-pen-nib"></i> Compose Campaign</span>
+                        <button id="copy-btn" class="btn btn-secondary"
+                            title="Copy email body to clipboard"
+                            style="padding: 0.5rem 1rem; font-size: 0.85rem; border-radius: 12px;">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="subject-header">
+                        <input type="text" id="email-subject" class="subject-field" placeholder="Campaign Subject Line">
+                    </div>
+                    <div id="email-body" class="composer" contenteditable="true" spellcheck="true"
+                        role="textbox" aria-label="Email body editor"></div>
+
+                    <div class="send-controls">
+                        <div class="recipients-panel">
+                            <div class="field">
+                                <label for="recipient-input">Recipient Delivery List</label>
+                                <div style="display: flex; gap: 0.75rem;">
+                                    <input type="email" id="recipient-input" placeholder="someone@example.com"
+                                        autocomplete="email">
+                                    <button id="add-recipient" class="btn btn-secondary"
+                                        style="width: 54px; padding: 0;" title="Add Recipient">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <button id="excel-btn" class="btn btn-secondary" style="width: 54px; padding: 0;"
+                                        title="Import from Spreadsheets">
+                                        <i class="fas fa-file-csv" style="color: var(--success);"></i>
+                                    </button>
+                                    <input type="file" id="excel-input" accept=".xlsx,.xls,.csv" class="hidden">
+                                </div>
+                                <div id="recipient-chips" class="chip-container"></div>
+                            </div>
+                        </div>
+
+                        <button id="send-btn" class="btn btn-primary" style="height: 58px; min-width: 240px;" disabled>
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Blast Campaign</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" role="alert" aria-live="polite">
+        <div class="toast-icon" id="toast-icon"></div>
+        <div id="toast-msg"></div>
+    </div>
+
+
+
+
+
+    <script src="/static/script.js"></script>
+</body>
+
+</html>
