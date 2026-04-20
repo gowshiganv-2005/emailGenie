@@ -59,58 +59,26 @@ class GenerateRequest(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    t_error = None
     if templates:
         try:
-            return templates.TemplateResponse("index.html", {"request": request})
+            # Modern FastAPI/Starlette signature handles the context/request correctly
+            return templates.TemplateResponse(request=request, name="index.html")
         except Exception as e:
             import traceback
-            t_error = f"{e}\n{traceback.format_exc()}"
+            error_details = f"{e}\n{traceback.format_exc()}"
+            return HTMLResponse(content=f"""
+            <html>
+                <body style="font-family: sans-serif; padding: 50px; text-align: center;">
+                    <h1>Email Genie AI</h1>
+                    <p>The application is running, but UI rendering failed.</p>
+                    <div style="text-align: left; background: #f8d7da; padding: 15px; display: inline-block; border-radius: 8px;">
+                        <pre>{error_details}</pre>
+                    </div>
+                </body>
+            </html>
+            """, status_code=500)
     
-    # Diagnostic info for debugging
-    diag = []
-    try:
-        from pathlib import Path
-        diag.append(f"CWD: {os.getcwd()}")
-        diag.append(f"File: {__file__}")
-        diag.append(f"Roots searched: {SEARCH_ROOTS}")
-        diag.append(f"Folders found in: {found_in}")
-        diag.append(f"Static path: {static_path}")
-        diag.append(f"Templates path: {templates_path}")
-        if t_error:
-            diag.append(f"<b>Template Error:</b> <pre>{t_error}</pre>")
-        
-        # List items in root_dir
-        root_dir = Path(__file__).resolve().parent.parent
-        diag.append(f"Root dir content: {os.listdir(str(root_dir)) if root_dir.exists() else 'N/A'}")
-        if (root_dir / "api").exists():
-            diag.append(f"API dir content: {os.listdir(str(root_dir / 'api'))}")
-            t_dir = root_dir / "api" / "templates"
-            if t_dir.exists():
-                diag.append(f"Templates content: {os.listdir(str(t_dir))}")
-    except Exception as e:
-        diag.append(f"Error listing: {e}")
-
-    diag_html = "".join([f"<li>{d}</li>" for d in diag])
-
-    # Fallback if templates are missing in serverless environment
-    return f"""
-    <html>
-        <head><title>Email Genie | Serverless Fallback</title></head>
-        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-            <h1>Email Genie AI</h1>
-            <p>The application is running, but UI templates could not be rendered.</p>
-            <p>Please check your deployment structure.</p>
-            <hr>
-            <div style="text-align: left; background: #eee; padding: 15px; display: inline-block; border-radius: 8px; max-width: 90%;">
-                <h3>Diagnostics:</h3>
-                <ul>{diag_html}</ul>
-            </div>
-            <hr>
-            <p><small>Backend Status: OK</small></p>
-        </body>
-    </html>
-    """
+    return HTMLResponse(content="<h1>Email Genie AI</h1><p>UI Templates not found.</p>", status_code=404)
 
 @app.post("/api/generate")
 async def generate_email_api(request: GenerateRequest):
