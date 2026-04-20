@@ -13,34 +13,32 @@ from app.email_service import email_service
 app = FastAPI(title="Email Genie")
 
 # Setup paths - serverless safe detection
-from pathlib import Path
 import os
 
 # Try multiple possible locations for static/templates
-POSSIBLE_ROOTS = [
-    Path("/var/task/api"),                     # Vercel Production Path
-    Path(__file__).resolve().parent.parent / "api", 
-    Path(__file__).resolve().parent.parent,
-    Path.cwd() / "api",
-    Path.cwd()
+SEARCH_ROOTS = [
+    "/var/task/api",
+    "/var/task",
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "api"),
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "api"),
+    os.getcwd()
 ]
 
+# Initialize components with safety checks
 static_path = None
 templates_path = None
+found_in = None
 
-for root in POSSIBLE_ROOTS:
-    if not root.exists():
-        continue
-    s = root / "static"
-    t = root / "templates"
-    if s.is_dir():
-        static_path = str(s)
-    if t.is_dir():
-        templates_path = str(t)
-    if static_path and templates_path:
+for root in SEARCH_ROOTS:
+    s_test = os.path.join(root, "static")
+    t_test = os.path.join(root, "templates")
+    
+    if os.path.isdir(s_test) and os.path.isdir(t_test):
+        static_path = s_test
+        templates_path = t_test
+        found_in = root
         break
 
-# Initialize components with safety checks
 if static_path:
     app.mount("/static", StaticFiles(directory=static_path), name="static")
 
@@ -70,9 +68,14 @@ async def home(request: Request):
     # Diagnostic info for debugging
     diag = []
     try:
+        from pathlib import Path
         diag.append(f"CWD: {os.getcwd()}")
         diag.append(f"File: {__file__}")
-        diag.append(f"Roots searched: {[str(r) for r in POSSIBLE_ROOTS]}")
+        diag.append(f"Roots searched: {SEARCH_ROOTS}")
+        diag.append(f"Folders found in: {found_in}")
+        diag.append(f"Static path: {static_path}")
+        diag.append(f"Templates path: {templates_path}")
+        
         # List items in root_dir
         root_dir = Path(__file__).resolve().parent.parent
         diag.append(f"Root dir content: {os.listdir(str(root_dir)) if root_dir.exists() else 'N/A'}")
