@@ -6,9 +6,6 @@ from pydantic import BaseModel
 from typing import Optional, List
 import os
 import json
-import pandas as pd
-import re
-from io import BytesIO
 from .ai_service import ai_service
 from .email_service import email_service
 
@@ -55,6 +52,10 @@ async def extract_emails_api(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Only Excel (.xlsx, .xls) or CSV (.csv) files are supported")
     
     try:
+        import pandas as pd
+        import re
+        from io import BytesIO
+        
         content = await file.read()
         
         if not content:

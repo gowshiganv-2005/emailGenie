@@ -18,32 +18,28 @@ class AIService:
         if not self.api_key:
             raise ValueError("GEMMA_API_KEY is not configured.")
 
-        system_prompt = f"""You are 'Shuttle One', a professional email assistant. 
-        Your goal is to write a clear, professional email based on the user's intent.
-        
-        TONE: {tone}
-        FORMAT: Return ONLY a JSON object with 'subject' and 'body' fields.
-        
-        USER INTENT: {user_prompt}
-        """
+        system_prompt = f"Write a {tone} email about: {user_prompt}. Return ONLY JSON: {{'subject': '...', 'body': '...'}}"
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
-            "X-Title": "Shuttle One"
+            "X-Title": "Email Genie"
         }
 
         messages = [
-            {"role": "system", "content": "You are Shuttle One, a professional email expansion agent. Output valid JSON only."},
+            {"role": "system", "content": "You are a professional email assistant. Output JSON only."},
             {"role": "user", "content": system_prompt}
         ]
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(self.api_url, headers=headers, json={
-                "model": self.model_name,
-                "messages": messages,
-                "temperature": 0.7
-            })
+        async with httpx.AsyncClient(timeout=9.0) as client:
+            try:
+                response = await client.post(self.api_url, headers=headers, json={
+                    "model": self.model_name,
+                    "messages": messages,
+                    "temperature": 0.7
+                })
+            except httpx.TimeoutException:
+                raise Exception("AI took too long (>9s). Vercel limits free projects to 10s. Try a shorter prompt or a faster model.")
             
             if response.status_code != 200:
                 raise Exception(f"AI Service Error: {response.text}")
