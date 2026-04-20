@@ -12,14 +12,41 @@ from app.email_service import email_service
 
 app = FastAPI(title="Email Genie")
 
-# Setup paths - ensure they are absolute
+# Setup paths - serverless safe detection
 from pathlib import Path
-BASE_DIR = Path(__file__).resolve().parent
-static_path = str(BASE_DIR / "static")
-templates_path = str(BASE_DIR / "templates")
+import os
 
-app.mount("/static", StaticFiles(directory=static_path), name="static")
-templates = Jinja2Templates(directory=templates_path)
+# Try multiple possible locations for static/templates
+POSSIBLE_ROOTS = [
+    Path(__file__).resolve().parent,           # /app/
+    Path(__file__).resolve().parent.parent,    # /root/
+    Path.cwd()                                 # current working dir
+]
+
+static_path = None
+templates_path = None
+
+for root in POSSIBLE_ROOTS:
+    s = root / "static"
+    t = root / "templates"
+    if s.is_dir() and (s / "style.css").exists(): # Verify it's the right static folder
+        static_path = str(s)
+    if t.is_dir() and (t / "index.html").exists():
+        templates_path = str(t)
+    if static_path and templates_path:
+        break
+
+# Initialize components with safety checks
+if static_path:
+    app.mount("/static", StaticFiles(directory=static_path), name="static")
+
+templates = None
+if templates_path:
+    try:
+        from fastapi.templating import Jinja2Templates
+        templates = Jinja2Templates(directory=templates_path)
+    except Exception:
+        templates = None
 
 # --- Models ---
 class GenerateRequest(BaseModel):
@@ -30,7 +57,25 @@ class GenerateRequest(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    if templates:
+        try:
+            return templates.TemplateResponse("index.html", {"request": request})
+        except Exception:
+            pass
+    
+    # Fallback if templates are missing in serverless environment
+    return """
+    <html>
+        <head><title>Email Genie | Serverless Fallback</title></head>
+        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
+            <h1>Email Genie AI</h1>
+            <p>The application is running, but UI templates could not be located.</p>
+            <p>Please check your deployment structure.</p>
+            <hr>
+            <p><small>Backend Status: OK</small></p>
+        </body>
+    </html>
+    """
 
 @app.post("/api/generate")
 async def generate_email_api(request: GenerateRequest):
