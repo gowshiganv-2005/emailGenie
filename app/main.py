@@ -7,10 +7,10 @@ from typing import Optional, List
 import os
 import json
 import re
-from .ai_service import ai_service
-from .email_service import email_service
+from app.ai_service import ai_service
+from app.email_service import email_service
 
-app = FastAPI(title="Shuttle One")
+app = FastAPI(title="Email Genie")
 
 # Setup paths - ensure they are absolute
 from pathlib import Path
