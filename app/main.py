@@ -6,15 +6,17 @@ from pydantic import BaseModel
 from typing import Optional, List
 import os
 import json
+import re
 from .ai_service import ai_service
 from .email_service import email_service
 
 app = FastAPI(title="Shuttle One")
 
 # Setup paths - ensure they are absolute
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-static_path = os.path.join(BASE_DIR, "static")
-templates_path = os.path.join(BASE_DIR, "templates")
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent
+static_path = str(BASE_DIR / "static")
+templates_path = str(BASE_DIR / "templates")
 
 app.mount("/static", StaticFiles(directory=static_path), name="static")
 templates = Jinja2Templates(directory=templates_path)
