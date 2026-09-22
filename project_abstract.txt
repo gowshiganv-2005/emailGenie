@@ -1,0 +1,33 @@
+PROJECT ABSTRACT: Email Genie (Autonomous Email Agent)
+
+1. INTRODUCTION
+Email Genie is a full-stack, AI-powered web application designed to automate the process of crafting and distributing professional emails. The system leverages state-of-the-art Large Language Models to generate context-aware email content based on minimal user prompts and desired tones. It seamlessly integrates recipient extraction from spreadsheets and reliable SMTP-based mass distribution, providing an end-to-end autonomous email workflow.
+
+2. TECHNOLOGY STACK
+- Backend Framework: FastAPI (Python) for high-performance, asynchronous REST APIs.
+- Artificial Intelligence: OpenRouter API utilizing the Gemma 3 4B IT model (google/gemma-3-4b-it:free) for intelligent text generation.
+- Frontend: Vanilla HTML5, CSS3, and ES6+ JavaScript, served via Jinja2 Templates for dynamic rendering.
+- Data Processing: Pandas library for robust parsing and extraction of email addresses from Excel (.xlsx, .xls) and CSV files.
+- Network & Protocol: HTTPX for asynchronous external API requests; SMTP (smtplib) over SSL for secure email transmission.
+- Deployment Support: Configured for Serverless deployments (e.g., Vercel) and local execution.
+
+3. CORE FEATURES
+- AI-Powered Content Generation: Transforms short prompts and tone selections (e.g., Professional, Casual) into well-structured email subjects and bodies.
+- Data Extraction: Automatically scans uploaded spreadsheets to parse and validate recipient email addresses using Regular Expressions.
+- Interactive Editing: Provides a user interface to review, refine, and modify the AI-generated content before dispatch.
+- Mass Distribution: Handles multi-recipient dispatch securely.
+- Attachment Handling: Supports file attachments up to 20MB, dynamically detecting MIME types for proper encoding.
+- Premium UI/UX: Features a modern, glassmorphism-inspired interface with responsive design and smooth micro-animations.
+
+4. APPLICATION WORKFLOW
+Step 1: Content Generation 
+The user enters a prompt and selects a tone on the web interface. The frontend sends a POST request to `/api/generate`. The backend AI Service constructs a strict system prompt and queries the OpenRouter API. The LLM returns a structured JSON containing the subject and body, which is parsed, validated, and returned to the frontend.
+
+Step 2: Recipient Selection 
+The user can manually input emails or upload a CSV/Excel file. If a file is uploaded, the `/api/extract-emails` endpoint reads the file into a Pandas DataFrame, flattens the content, and extracts valid email addresses using regex, automatically discarding invalid or empty fields.
+
+Step 3: Review and Attachments
+The user reviews the generated email in the interactive editor and optionally uploads attachments. The frontend enforces file size constraints before transmission.
+
+Step 4: Dispatch
+The user initiates the send command, triggering the `/api/send` endpoint. The backend processes the multipart form data, validates the recipient list and attachment sizes. The Email Service then establishes a secure SMTP SSL connection (authenticating via App Passwords/credentials), constructs MIME multipart messages (combining plain text, HTML fallback, and attachments), and dispatches the emails individually to ensure high deliverability. Finally, a success/failure summary is returned to the user.
