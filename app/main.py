@@ -10,7 +10,23 @@ import re
 from app.ai_service import ai_service
 from app.email_service import email_service
 
-app = FastAPI(title="Email Genie")
+app = FastAPI(title="Email Genie", redirect_slashes=False)
+
+@app.middleware("http")
+async def restore_original_path(request: Request, call_next):
+    original_path = request.query_params.get("__path__")
+    if not original_path:
+        original_path = (
+            request.headers.get("x-matched-path")
+            or request.headers.get("x-forwarded-uri")
+            or request.headers.get("x-invoke-path")
+        )
+    if original_path:
+        path_only = original_path.split("?")[0]
+        if not path_only.startswith("/"):
+            path_only = "/" + path_only
+        request.scope["path"] = path_only
+    return await call_next(request)
 
 # Setup paths - serverless safe detection
 import os
@@ -82,7 +98,9 @@ async def home(request: Request):
     return HTMLResponse(content="<h1>Email Genie AI</h1><p>UI Templates not found.</p>", status_code=404)
 
 @app.post("/api/generate")
+@app.post("/api/generate/")
 @app.post("/generate")
+@app.post("/generate/")
 async def generate_email_api(request: GenerateRequest):
     if not request.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt cannot be empty")
@@ -95,7 +113,9 @@ async def generate_email_api(request: GenerateRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/extract-emails")
+@app.post("/api/extract-emails/")
 @app.post("/extract-emails")
+@app.post("/extract-emails/")
 async def extract_emails_api(file: UploadFile = File(...)):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file uploaded")
@@ -138,7 +158,9 @@ async def extract_emails_api(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
 
 @app.post("/api/send")
+@app.post("/api/send/")
 @app.post("/send")
+@app.post("/send/")
 async def send_email_api(
     subject: str = Form(...),
     body: str = Form(...),
