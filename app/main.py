@@ -30,17 +30,14 @@ templates_path = None
 found_in = None
 
 for root in SEARCH_ROOTS:
-    s_test = os.path.join(root, "static")
-    t_test = os.path.join(root, "templates")
-    
-    if os.path.isdir(s_test) and os.path.isdir(t_test):
-        static_path = s_test
-        templates_path = t_test
-        found_in = root
-        break
+    if not static_path and os.path.isdir(os.path.join(root, "static")):
+        static_path = os.path.join(root, "static")
+    if not templates_path and os.path.isdir(os.path.join(root, "templates")):
+        templates_path = os.path.join(root, "templates")
 
 if static_path:
     app.mount("/static", StaticFiles(directory=static_path), name="static")
+    app.mount("/api/static", StaticFiles(directory=static_path), name="api_static")
 
 templates = None
 if templates_path:
@@ -58,6 +55,10 @@ class GenerateRequest(BaseModel):
 # --- Routes ---
 
 @app.get("/", response_class=HTMLResponse)
+@app.get("/api", response_class=HTMLResponse)
+@app.get("/api/index", response_class=HTMLResponse)
+@app.get("/api/index.py", response_class=HTMLResponse)
+@app.get("/index", response_class=HTMLResponse)
 async def home(request: Request):
     if templates:
         try:
@@ -81,6 +82,7 @@ async def home(request: Request):
     return HTMLResponse(content="<h1>Email Genie AI</h1><p>UI Templates not found.</p>", status_code=404)
 
 @app.post("/api/generate")
+@app.post("/generate")
 async def generate_email_api(request: GenerateRequest):
     if not request.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt cannot be empty")
@@ -93,6 +95,7 @@ async def generate_email_api(request: GenerateRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/extract-emails")
+@app.post("/extract-emails")
 async def extract_emails_api(file: UploadFile = File(...)):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file uploaded")
@@ -135,6 +138,7 @@ async def extract_emails_api(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
 
 @app.post("/api/send")
+@app.post("/send")
 async def send_email_api(
     subject: str = Form(...),
     body: str = Form(...),
